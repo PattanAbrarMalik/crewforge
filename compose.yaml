@@ -1,0 +1,16 @@
+services:
+  integration:
+    build: .
+    command: npm test
+  load:
+    build: .
+    profiles: [load]
+    command: npm run test:load
+    volumes:
+      - ./reports:/app/reports
+  recovery:
+    build: .
+    profiles: [recovery]
+    command: npm run test:chaos
+    volumes:
+      - ./reports:/app/reports

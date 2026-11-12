@@ -1,0 +1,12 @@
+{
+  "measuredAt": "2026-11-12T14:29:57.614Z",
+  "passed": true,
+  "scenario": "SIGKILL process group after database commit but before HTTP acknowledgement; restart persistent SQLite and retry original key.",
+  "retryStatus": 200,
+  "invariant": {
+    "memberships": 1,
+    "audits": 1,
+    "brokenCounts": 0
+  },
+  "scope": "Local workerd and Node bridge restart. Not a simulated provider-wide Cloudflare failure."
+}
