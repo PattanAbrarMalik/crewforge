@@ -473,3 +473,19 @@ test("42 interrupted readers do not poison other board requests", async () => {
     assert.ok(responses.every((r) => r.status === 200));
   }
 });
+test("43 recruiting writes immediately invalidate cached board rows", async () => {
+  const u = await h.user();
+  const t = await h.create(u, 4, "Cacheinvalidate");
+  assert.equal((await h.call(u, "/board?q=Cacheinvalidate")).body.items.length, 1);
+  assert.equal((await h.call(u, `/teams/${t}`, "PATCH", { lookingFor: false })).status, 200);
+  assert.equal((await h.call(u, "/board?q=Cacheinvalidate")).body.items.length, 0);
+});
+test("44 board cache expires after a change outside the current isolate", async () => {
+  const u = await h.user();
+  const t = await h.create(u, 4, "Cacheexpiry");
+  assert.equal((await h.call(u, "/board?q=Cacheexpiry")).body.items.length, 1);
+  // Direct DB change models a write handled by another Worker isolate.
+  await h.db.prepare("UPDATE teams SET looking_for=0 WHERE id=?").bind(t).run();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal((await h.call(u, "/board?q=Cacheexpiry")).body.items.length, 0);
+});

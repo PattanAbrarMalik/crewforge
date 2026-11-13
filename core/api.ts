@@ -46,46 +46,50 @@ const profileSchema = z
     utcOffset: z.number().int().min(-720).max(840),
   })
   .strict();
-// Share plain query results between overlapping requests, never a pending
-// Promise or I/O handle: Workers binds pending I/O to its originating request.
-// Each waiting request owns its timer, so canceling the first reader cannot
-// leave another request with no live event source (runtime error 1101).
-type PendingRead = {
-  started: number;
-  state: "pending" | "done" | "failed";
+// Cache only completed, public board rows. Never share a pending Promise or
+// I/O handle: Workers binds pending I/O to the request that created it.
+// Rows are fresh for 100 ms. During one request-owned refresh, other readers
+// may use the completed snapshot for up to 1 second from its creation. Membership
+// admission always checks the database transaction, never this read cache.
+type BoardRead = {
+  expiresAt: number;
+  staleUntil: number;
+  refreshing: boolean;
   rows?: any[];
 };
-const inFlight = new Map<string, PendingRead>();
-async function sharedRead(
+const boardReads = new Map<string, BoardRead>();
+async function cachedBoardRead(
   key: string,
   fn: () => Promise<any[]>,
 ): Promise<any[]> {
   const now = Date.now();
-  for (const [oldKey, entry] of inFlight)
-    if (now - entry.started > 1000) inFlight.delete(oldKey);
-  const existing = inFlight.get(key);
-  if (existing) {
-    const deadline = Date.now() + 1000;
-    while (existing.state === "pending" && Date.now() < deadline) {
-      await new Promise<void>((resolve) => setTimeout(resolve, 5));
-    }
-    if (existing.state === "done") return existing.rows!;
-    // A failed or abandoned owner is retried using this reader's own binding.
-    if (inFlight.get(key) === existing) inFlight.delete(key);
-    return await fn();
-  }
-  const entry: PendingRead = { started: now, state: "pending" };
-  if (inFlight.size < 256) inFlight.set(key, entry);
+  const existing = boardReads.get(key);
+  if (existing?.rows && existing.expiresAt > now) return existing.rows;
+  if (existing?.rows && existing.refreshing && existing.staleUntil > now)
+    return existing.rows;
+  // Bounded per-isolate storage. Replacing the entry also gives each query a
+  // generation token: an invalidated read cannot repopulate a newer cache.
+  if (!boardReads.has(key) && boardReads.size >= 256)
+    boardReads.delete(boardReads.keys().next().value!);
+  const entry: BoardRead = {
+    expiresAt: existing?.expiresAt ?? 0,
+    staleUntil: existing?.staleUntil ?? 0,
+    rows: existing?.rows,
+    refreshing: true,
+  };
+  boardReads.set(key, entry);
   try {
     const rows = await fn();
-    entry.rows = rows;
-    entry.state = "done";
+    if (boardReads.get(key) === entry) {
+      entry.rows = rows;
+      entry.expiresAt = Date.now() + 100;
+      entry.staleUntil = Date.now() + 1000;
+      entry.refreshing = false;
+    }
     return rows;
   } catch (error) {
-    entry.state = "failed";
+    if (boardReads.get(key) === entry) boardReads.delete(key);
     throw error;
-  } finally {
-    if (inFlight.get(key) === entry) inFlight.delete(key);
   }
 }
 
@@ -273,7 +277,7 @@ export async function handleApi(req: Request, ctx: Context): Promise<Response> {
         }
         const query = `SELECT t.*,p.name leader_name FROM teams t JOIN people p ON p.id=t.leader_id WHERE ${terms.join(" AND ")} ORDER BY t.updated_at DESC,t.id DESC LIMIT ?`;
         args.push(limitN + 1);
-        const rows = await sharedRead(
+        const rows = await cachedBoardRead(
           event + "|" + query + JSON.stringify(args),
           () => all(query, ...args),
         );
@@ -511,8 +515,8 @@ export async function handleApi(req: Request, ctx: Context): Promise<Response> {
           fail(409, "The team changed. Refresh and try again.");
         throw error;
       }
-      for (const cacheKey of inFlight.keys())
-        if (cacheKey.startsWith(event + "|")) inFlight.delete(cacheKey);
+      for (const cacheKey of boardReads.keys())
+        if (cacheKey.startsWith(event + "|")) boardReads.delete(cacheKey);
       return reply(result);
     }
     if (path === "/profile" && method === "PATCH") {

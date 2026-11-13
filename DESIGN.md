@@ -11,7 +11,7 @@ Idempotency receipts bind actor + key to a request fingerprint and original resp
 Production trusts the hosting gateway’s authenticated user ID. Sandbox personas are namespaced by a hash of the authenticated owner and never impersonate live participants. Writes validate JSON, size, origin and strict field schemas. Persistent rate limits cover writes and invite-code attempts. Codes contain 128 random bits, expire, and rotate. The invite table stores only digests; leader-only idempotency receipts retain original responses for safe retries.
 
 ## Reads and realtime
-Indexed cursor pagination and FTS5 token-prefix search bound board reads. SSE emits audit revision invalidations; the client refetches authorized data. Audit rows commit alongside changes, so reconnecting clients recover final state. Overlapping identical board reads may share only the in-flight query, without a timed cache. Writes invalidate sharing for the event.
+Indexed cursor pagination and FTS5 token-prefix search bound board reads. A bounded 256-entry cache stores only completed public board rows: fresh for 100 ms, reusable for up to one second while a request refreshes them. Local writes invalidate the event; other isolates expire snapshots by TTL. This explicitly trades brief read staleness for bounded database traffic. In-flight reads cannot repopulate an invalidated entry. No pending I/O is shared across requests. Admission and authorization always use database state. SSE emits audit revision invalidations every 1.5 seconds; clients refetch authorized data and recover final state on reconnection.
 
 Suggestions score missing skill coverage (70) and circular UTC-offset proximity (30), with visible components. This is an explainable heuristic, not a recruiting prediction.
 

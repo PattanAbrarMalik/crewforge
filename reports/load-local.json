@@ -1,0 +1,50 @@
+{
+  "measuredAt": "2026-11-12T20:07:42.625Z",
+  "runtime": "v24.22.1",
+  "fixture": {
+    "users": 10000,
+    "teams": 2000,
+    "members": 6000
+  },
+  "scope": "Local workerd + SQLite via Miniflare, loopback HTTP, 100 authenticated identities. Excludes public-network/TLS latency and Vinext routing. Completed public board rows use a bounded per-isolate cache: 100 ms fresh, at most 1 second old while one request refreshes; local writes invalidate it. No pending I/O is shared.",
+  "results": [
+    {
+      "label": "Default paginated board",
+      "connections": 100,
+      "durationSeconds": 30,
+      "completed": 117560,
+      "requestsPerSecond": 3919.3,
+      "p50Ms": 3.318,
+      "p95Ms": 146.503,
+      "p99Ms": 756.149,
+      "errors": 84,
+      "errorKinds": {
+        "ECONNRESET": 84
+      },
+      "timeouts": 0,
+      "statuses": {
+        "200": 117560
+      },
+      "targetP95Ms": 200,
+      "targetMet": false
+    },
+    {
+      "label": "Four rotating search queries",
+      "connections": 100,
+      "durationSeconds": 20,
+      "completed": 67471,
+      "requestsPerSecond": 3373.95,
+      "p50Ms": 3.253,
+      "p95Ms": 30.254,
+      "p99Ms": 739.572,
+      "errors": 0,
+      "errorKinds": {},
+      "timeouts": 0,
+      "statuses": {
+        "200": 67471
+      },
+      "targetP95Ms": 200,
+      "targetMet": true
+    }
+  ]
+}

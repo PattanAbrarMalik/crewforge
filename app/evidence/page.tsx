@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import load from "../../reports/load.json";
 import chaos from "../../reports/chaos.json";
+import tests from "../../reports/tests.json";
 export default function Evidence() {
   return (
     <div
@@ -47,7 +48,7 @@ export default function Evidence() {
         <div>
           <ShieldCheck size={26} />
           <span>
-            <strong>47 / 47</strong>
+            <strong>{tests.pass} / {tests.tests}</strong>
             <small>integration tests passing</small>
           </span>
         </div>
@@ -157,9 +158,9 @@ export default function Evidence() {
             year: "numeric",
           })}
           . Target: p95 below 200 ms.{" "}
-          {load.results[0].targetMet
-            ? "The default board meets the target in this run."
-            : "The default board did not meet the target in this run."}{" "}
+          {load.results.every((r) => r.targetMet)
+            ? "Both workloads meet the latency and zero-error targets in this run."
+            : "Some workloads did not meet all targets; inspect latency and errors above."}{" "}
           {load.scope}
         </p>
         <a

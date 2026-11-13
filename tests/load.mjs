@@ -1,6 +1,7 @@
 import autocannon from "autocannon";
 import { harness } from "./harness.ts";
 import { mkdir, writeFile } from "node:fs/promises";
+import { arch, cpus, platform, totalmem } from "node:os";
 const h = await harness();
 try {
   const db = h.db,
@@ -89,7 +90,8 @@ try {
   async function run(label, paths, duration) {
     let clientNumber = 0,
       logged = false;
-    const samples = [],
+    const errorKinds = {},
+      samples = [],
       statuses = {};
     const result = await new Promise((resolve, reject) => {
       const run = autocannon(
@@ -120,6 +122,10 @@ try {
         }
         statuses[status] = (statuses[status] || 0) + 1;
       });
+      run.on("reqError", (error) => {
+        const kind = error?.code ?? error?.message ?? "unknown";
+        errorKinds[kind] = (errorKinds[kind] || 0) + 1;
+      });
     });
     samples.sort((a, b) => a - b);
     const pct = (p) =>
@@ -134,6 +140,7 @@ try {
       p95Ms: pct(0.95),
       p99Ms: pct(0.99),
       errors: result.errors,
+      errorKinds,
       timeouts: result.timeouts,
       statuses,
       targetP95Ms: 200,
@@ -164,9 +171,17 @@ try {
   const report = {
     measuredAt: new Date().toISOString(),
     runtime: process.version,
+    runner: {
+      environment: process.env.GITHUB_ACTIONS ? "GitHub Actions ubuntu-latest" : "Codex managed Linux",
+      os: platform(),
+      architecture: arch(),
+      cpuModel: cpus()[0]?.model,
+      cpuCount: cpus().length,
+      memoryBytes: totalmem(),
+    },
     fixture: counts,
     scope:
-      "Local workerd + SQLite via Miniflare, loopback HTTP, 100 authenticated identities. Excludes public-network/TLS latency and Vinext routing. In-flight query coalescing enabled; no timed response cache.",
+      "Local workerd + SQLite via Miniflare, loopback HTTP, 100 authenticated identities. Excludes public-network/TLS latency and Vinext routing. Completed public board rows use a bounded per-isolate cache: 100 ms fresh, at most 1 second old while one request refreshes; local writes invalidate it. No pending I/O is shared.",
     results: [board, varied],
   };
   await mkdir("reports", { recursive: true });
@@ -174,7 +189,7 @@ try {
     process.env.DEBUG_LOAD ? "reports/load-debug.json" : "reports/load.json",
     JSON.stringify(report, null, 2) + "\n",
   );
-  if (!board.targetMet) process.exitCode = 1;
+  if (!board.targetMet || !varied.targetMet) process.exitCode = 1;
 } finally {
   await h.mf.dispose();
 }

@@ -2,6 +2,10 @@
 
 Race-proof team formation for Hack4Hack Crew Hiring Challenge 2026, **PS1**. The challenge asks entrants to choose one problem statement; this entry focuses on the complete PS1 workflow.
 
+[Live app](https://crewforge-abrar-h4h.soaringmonk2.chatgpt.site) · [Source](https://github.com/PattanAbrarMalik/crewforge) · [Validation report](docs/VALIDATION.md) · [One-page design](docs/CrewForge-design.pdf)
+
+The app and repository currently require owner access. Judge access must be enabled before submission.
+
 ## What works
 
 - Authenticated profiles and a searchable, cursor-paginated team board.
@@ -49,8 +53,8 @@ Database triggers and constraints enforce the core invariants independently of H
 
 ## Submission material
 
-- Source repository: publish this project to your GitHub account.
-- Live demo: use the deployment URL shown with this delivery. A private publication must be shared with judges or explicitly made public before submission.
+- Source repository: https://github.com/PattanAbrarMalik/crewforge (private until judge access is authorized).
+- Live demo: https://crewforge-abrar-h4h.soaringmonk2.chatgpt.site (private until judge access is authorized).
 - One-page design: `docs/CrewForge-design.pdf` (editable text in `DESIGN.md`).
 - Measured load report: `reports/load.json` and `docs/VALIDATION.md`.
 - Walkthrough: follow `docs/DEMO.md` and record a video under five minutes.

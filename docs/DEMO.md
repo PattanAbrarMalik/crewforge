@@ -12,7 +12,7 @@ Record the deployed app and your terminal. Use real results, show the URL, and k
 
 **2:45–3:20 — Retry and failure.** Show the idempotency tests and `reports/chaos.json`. Explain the killed process after commit but before acknowledgement, then retrying the same key after restart: one membership, one audit entry. State that this tests local process recovery, not a provider-wide outage.
 
-**3:20–3:55 — Performance.** Show `reports/load.json`: 10,000 users, 2,000 teams, 100 connections. Read the actual p95 result. Explain index-backed pagination and in-flight query coalescing. Clearly distinguish local Worker results from hosted network latency.
+**3:20–3:55 — Performance.** Show `reports/load.json`: 10,000 users, 2,000 teams, 100 connections. Read the actual p95 and error counts. Explain index-backed pagination and the bounded cache: 100 ms fresh, up to one second stale during refresh. Writes invalidate local entries; admission always checks the database. Clearly distinguish loopback Worker results from hosted network latency.
 
 **3:55–4:25 — Lifecycle and UX.** Leave as leader and show deterministic succession; use a fresh single-person team to show empty-team deletion. Demonstrate Tab/Enter and a narrow browser window. Explain optimistic rollback and errors.
 
