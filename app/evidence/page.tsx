@@ -8,6 +8,7 @@ import {
 import load from "../../reports/load.json";
 import chaos from "../../reports/chaos.json";
 import tests from "../../reports/tests.json";
+import ci from "../../reports/ci.json";
 export default function Evidence() {
   return (
     <div
@@ -70,12 +71,12 @@ export default function Evidence() {
       <section className="panel" style={{ marginBottom: 22 }}>
         <div className="section-heading">
           <h2>Measured, not estimated</h2>
-          <span className="role-badge">Local benchmark</span>
+          <span className="role-badge">CI benchmark</span>
         </div>
         <p className="muted">
           10,000 users · 2,000 teams · 6,000 memberships · 100 concurrent
           connections. Runs use real workerd and SQLite with 100 authenticated
-          test identities.
+          test identities on a GitHub Actions runner with 2 vCPUs.
         </p>
         <div style={{ overflowX: "auto", marginTop: 20 }}>
           <table
@@ -170,6 +171,9 @@ export default function Evidence() {
           download
         >
           Download raw benchmark <ArrowUpRight size={15} />
+        </a>
+        <a className="plain-link" style={{ justifyContent: "flex-start", marginTop: 12 }} href={ci.runUrl} target="_blank" rel="noreferrer">
+          View independent verification run <ArrowUpRight size={15} />
         </a>
       </section>
       <div className="detail-columns">

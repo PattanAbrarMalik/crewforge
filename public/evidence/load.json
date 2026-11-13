@@ -1,26 +1,35 @@
 {
-  "measuredAt": "2026-11-12T19:27:50.165Z",
-  "runtime": "v24.22.1",
+  "measuredAt": "2026-11-13T02:11:03.772Z",
+  "runtime": "v24.22.2",
+  "runner": {
+    "environment": "GitHub Actions ubuntu-latest",
+    "os": "linux",
+    "architecture": "x64",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "cpuCount": 2,
+    "memoryBytes": 8317935616
+  },
   "fixture": {
     "users": 10000,
     "teams": 2000,
     "members": 6000
   },
-  "scope": "Local workerd + SQLite via Miniflare, loopback HTTP, 100 authenticated identities. Excludes public-network/TLS latency and Vinext routing. In-flight query coalescing enabled; no timed response cache.",
+  "scope": "Local workerd + SQLite via Miniflare, loopback HTTP, 100 authenticated identities. Excludes public-network/TLS latency and Vinext routing. Completed public board rows use a bounded per-isolate cache: 100 ms fresh, at most 1 second old while one request refreshes; local writes invalidate it. No pending I/O is shared.",
   "results": [
     {
       "label": "Default paginated board",
       "connections": 100,
       "durationSeconds": 30,
-      "completed": 105503,
-      "requestsPerSecond": 3517.3,
-      "p50Ms": 22.301,
-      "p95Ms": 66.89,
-      "p99Ms": 95.332,
+      "completed": 109893,
+      "requestsPerSecond": 3663.57,
+      "p50Ms": 2.557,
+      "p95Ms": 111.385,
+      "p99Ms": 434.092,
       "errors": 0,
+      "errorKinds": {},
       "timeouts": 0,
       "statuses": {
-        "200": 105503
+        "200": 109893
       },
       "targetP95Ms": 200,
       "targetMet": true
@@ -29,18 +38,19 @@
       "label": "Four rotating search queries",
       "connections": 100,
       "durationSeconds": 20,
-      "completed": 22315,
-      "requestsPerSecond": 1115.75,
-      "p50Ms": 2.973,
-      "p95Ms": 536.144,
-      "p99Ms": 1301.284,
-      "errors": 3,
+      "completed": 57435,
+      "requestsPerSecond": 2872.2,
+      "p50Ms": 2.7,
+      "p95Ms": 40.441,
+      "p99Ms": 998.006,
+      "errors": 0,
+      "errorKinds": {},
       "timeouts": 0,
       "statuses": {
-        "200": 22315
+        "200": 57435
       },
       "targetP95Ms": 200,
-      "targetMet": false
+      "targetMet": true
     }
   ]
 }

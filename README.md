@@ -43,7 +43,7 @@ npm run test:load     # 10,000 people, 2,000 teams, 100 connections
 npm run test:chaos    # SIGKILL after commit, restart and replay
 ```
 
-`tests/worker.ts` is an isolated test adapter. It is never imported into production. Load results are written to `reports/load.json`; restart results to `reports/chaos.json`. The tests use separate local databases and never seed the live event with synthetic scale data. The GitHub Actions workflow runs type checking, integration tests, and the crash-recovery test. Docker Compose provides the same integration, load and recovery runners; Docker execution was not verified in this environment.
+`tests/worker.ts` is an isolated test adapter. It is never imported into production. Load results are written to `reports/load.json`; restart results to `reports/chaos.json`. The tests use separate local databases and never seed the live event with synthetic scale data. The GitHub Actions workflow runs type checking, integration tests, crash recovery, and an independent performance job. Both latency and zero-error targets must pass for that job to succeed. Docker Compose provides the same integration, load and recovery runners; Docker execution was not verified in this environment.
 
 ## Architecture
 
